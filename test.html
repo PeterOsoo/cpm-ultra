@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPM Ultra Master | Roster Intelligence 2026</title>
+    <title>CPM Ultra Master | 2026 Strategy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -19,7 +19,7 @@
         .input-edit:focus { border-bottom-color: #3b82f6; outline: none; background: #f8fafc; }
     </style>
 </head>
-<body class="bg-[#f8fafc] font-sans text-slate-900 p-4 md:p-8 min-h-screen uppercase">
+<body class="bg-[#f8fafc] font-sans text-slate-900 p-4 md:p-8 min-h-screen uppercase tracking-tight">
 
 <div class="max-w-[1600px] mx-auto space-y-6">
     <header class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-6">
@@ -54,8 +54,8 @@
                 </div>
                 <div id="sec-basics" class="accordion-content open p-6 space-y-6">
                     <div class="bg-slate-100 p-1.5 rounded-2xl flex gap-1">
-                        <button onclick="setMode('volume')" id="btn-vol" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all bg-white text-blue-600 shadow-sm uppercase">Volume Mode</button>
-                        <button onclick="setMode('hours')" id="btn-hrs" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all text-slate-500 uppercase">Hours Mode</button>
+                        <button onclick="setMode('volume')" id="btn-vol" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all bg-white text-blue-600 shadow-sm uppercase">Volume</button>
+                        <button onclick="setMode('hours')" id="btn-hrs" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all text-slate-500 uppercase">Hours</button>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="col-span-2">
@@ -92,15 +92,16 @@
                     </div>
                     <div id="rosterContainer" class="space-y-2"></div>
                     
-                    <div id="rosterStatusBox" class="p-3 rounded-xl space-y-2 bg-slate-50 border">
-                        <div id="hcStatusLine" class="text-[10px] font-black flex justify-between uppercase"></div>
-                        <div id="hrStatusLine" class="text-[10px] font-black flex justify-between uppercase"></div>
+                    <div id="rosterStatusBox" class="p-4 rounded-xl space-y-3 bg-slate-900 text-white shadow-lg border border-slate-700">
+                        <div id="hcStatusLine" class="text-[9px] font-black flex justify-between uppercase tracking-widest border-b border-slate-700 pb-2"></div>
+                        <div id="dailyAvailLine" class="text-[10px] font-black flex justify-between uppercase text-emerald-400"></div>
+                        <div id="hrStatusLine" class="text-[9px] font-black flex justify-between uppercase tracking-widest pt-1"></div>
                     </div>
                 </div>
             </div>
 
             <div class="bg-white rounded-[1.5rem] shadow-sm border overflow-hidden">
-                <div onclick="toggleAcc('usecase')" class="p-5 flex justify-between items-center cursor-pointer bg-slate-50/50 hover:bg-slate-50">
+                <div onclick="toggleAcc('usecase')" class="p-5 flex justify-between items-center cursor-pointer bg-slate-50/50">
                     <span class="text-[11px] font-black uppercase tracking-widest flex items-center gap-3 text-blue-600">
                         <i data-lucide="box" class="w-4 h-4"></i> Use Case Provision
                     </span>
@@ -112,17 +113,17 @@
                         <input type="number" id="ucCount" value="2" min="1" max="12" onchange="renderUCs()" class="w-12 p-1 bg-white border rounded text-center font-bold">
                     </div>
                     <div class="grid grid-cols-3 gap-2 px-2 text-[8px] font-black text-slate-400 uppercase text-center italic">
-                        <span>Daily Vol/Hrs</span>
-                        <span>Avg AHT / Wt%</span>
+                        <span>Vol/Hrs</span>
+                        <span>Avg AHT</span>
                         <span>Buffer %</span>
                     </div>
                     <div id="ucContainer" class="space-y-3"></div>
-                    <div id="ucValidation" class="p-3 rounded-xl text-[10px] font-black uppercase flex items-center justify-between"></div>
+                    <div id="ucValidation" class="p-3 rounded-xl text-[10px] font-black uppercase flex items-center justify-between border"></div>
                 </div>
             </div>
 
             <div id="shiftStratSec" class="bg-white rounded-[1.5rem] shadow-sm border overflow-hidden">
-                <div onclick="toggleAcc('strat')" class="p-5 flex justify-between items-center cursor-pointer bg-slate-50/50 hover:bg-slate-50">
+                <div onclick="toggleAcc('strat')" class="p-5 flex justify-between items-center cursor-pointer bg-slate-50/50">
                     <span class="text-[11px] font-black uppercase tracking-widest flex items-center gap-3 text-purple-600">
                         <i data-lucide="clock" class="w-4 h-4"></i> Shift Breakdown
                     </span>
@@ -131,27 +132,23 @@
                 <div id="sec-strat" class="accordion-content open p-6 space-y-4">
                     <div class="flex bg-slate-100 p-1 rounded-xl">
                         <button onclick="setShiftMode('number')" id="sModeNum" class="flex-1 py-1 text-[9px] font-black rounded-lg bg-white text-purple-600 shadow-sm uppercase">Numbers</button>
-                        <button onclick="setShiftMode('percent')" id="sModePerc" class="flex-1 py-1 text-[9px] font-black rounded-lg text-slate-500 uppercase">Percent %</button>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Num Shift Blocks</span>
-                        <input type="number" id="shiftBlockCount" value="2" min="1" max="12" onchange="renderShifts()" class="w-12 p-1 border rounded text-center font-bold">
+                        <button onclick="setShiftMode('percent')" id="sModePerc" class="flex-1 py-1 text-[9px] font-black rounded-lg text-slate-500 uppercase">Percentage</button>
                     </div>
                     <div id="shiftStratContainer" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
-                    <div id="stratValidation" class="p-3 rounded-xl text-[10px] font-black uppercase flex items-center justify-between"></div>
+                    <div id="stratValidation" class="p-3 rounded-xl text-[10px] font-black uppercase flex items-center justify-between border"></div>
                 </div>
             </div>
         </aside>
 
         <main class="lg:col-span-8 bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-8 border-b flex justify-between items-center bg-slate-50/50">
-                <h3 class="text-xs font-black uppercase tracking-[0.4em] text-slate-400 italic italic">Weekly Production Timeline</h3>
+                <h3 class="text-xs font-black uppercase tracking-[0.4em] text-slate-400">Weekly Production Timeline</h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50/80 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b">
                         <tr>
-                            <th class="px-10 py-6 text-left">Period</th>
+                            <th class="px-10 py-6 text-left">Timeline</th>
                             <th class="px-10 py-6 text-center">Net Working Days</th>
                             <th class="px-10 py-6 text-center">Demand Hours</th>
                             <th class="px-10 py-6 text-right">Target FTE</th>
@@ -249,21 +246,17 @@
         renderShifts();
     }
 
-    // ROSTER CONFIG - DESCENDING UNIQUE LOGIC
+    // ROSTER CONFIGURATION
     function renderRoster() {
         let count = parseInt(document.getElementById('rosterCount').value);
         if (count > 8) count = 8;
-        
         const cont = document.getElementById('rosterContainer');
         const totalHC = parseInt(document.getElementById('totalCWHeadcount').value) || 0;
         cont.innerHTML = '';
         const dist = distributeInteger(totalHC, count);
 
         for (let i = 0; i < count; i++) {
-            // Sequential Descending: Row 1 = 8h, Row 2 = 7h, etc.
             let uniqueHr = 8 - i; 
-            if (uniqueHr < 1) uniqueHr = 1; // Fallback if count somehow > 8
-
             cont.innerHTML += `
                 <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
                     <div class="flex-1"><input type="number" value="${uniqueHr}" onchange="validateRoster()" class="roster-hrs-val w-full input-pill p-1.5 text-xs text-emerald-600 font-black"></div>
@@ -297,22 +290,11 @@
         const demandDailyHrs = (state.mode === 'volume') ? (targetDailyInput * 0.25) : targetDailyInput;
         const hrDiff = effectiveHrs - demandDailyHrs;
 
-        const hcLine = document.getElementById('hcStatusLine');
-        const hrLine = document.getElementById('hrStatusLine');
+        // Status Lines
+        document.getElementById('hcStatusLine').innerHTML = `<span>HC Status:</span> <span class="${Math.abs(hcDiff) < 1 ? 'text-emerald-500' : 'text-red-500'}">${sumHC} / ${targetHC} CWs</span>`;
+        document.getElementById('dailyAvailLine').innerHTML = `<span>Daily Availability:</span> <span>${sumHrs.toFixed(0)} HRS</span>`;
+        document.getElementById('hrStatusLine').innerHTML = `<span>Hrs Status:</span> <span class="${hrDiff >= 0 ? 'text-emerald-400' : 'text-red-400 status-pulse'}">${hrDiff >= 0 ? '+' : ''}${hrDiff.toFixed(1)} HRS vs Demand</span>`;
 
-        if (Math.abs(hcDiff) < 1) {
-            hcLine.innerHTML = `<span>HC MATCHED</span> <span class="text-emerald-500">${sumHC} CWs</span>`;
-        } else {
-            hcLine.innerHTML = `<span>HC MISMATCH</span> <span class="text-red-500">${hcDiff > 0 ? 'SHORT' : 'OVER'}: ${Math.abs(hcDiff)}</span>`;
-        }
-
-        if (hrDiff >= 0) {
-            hrLine.innerHTML = `<span>HOURS SURPLUS</span> <span class="text-emerald-600">+${hrDiff.toFixed(1)} HRS</span>`;
-        } else {
-            hrLine.innerHTML = `<span>HOURS DEFICIT</span> <span class="text-red-600 status-pulse">${hrDiff.toFixed(1)} HRS</span>`;
-        }
-
-        lucide.createIcons();
         runAnalysis();
     }
 
@@ -343,10 +325,10 @@
         const diff = target - sum;
         const box = document.getElementById('ucValidation');
         if (Math.abs(diff) < 1) {
-            box.innerHTML = `<span>Balanced</span> <i data-lucide="check-circle" class="w-3 h-3 text-emerald-500"></i>`;
+            box.innerHTML = `<span>Provisions Balanced</span> <i data-lucide="check-circle" class="w-3 h-3 text-emerald-500"></i>`;
             box.className = "p-3 rounded-xl text-[10px] font-black flex items-center justify-between bg-emerald-50 text-emerald-600 mt-2";
         } else {
-            box.innerHTML = `<span>Off: ${Math.abs(diff).toFixed(0)}</span> <i data-lucide="alert-circle" class="w-3 h-3 pulse-red"></i>`;
+            box.innerHTML = `<span>Off by: ${Math.abs(diff).toFixed(0)}</span> <i data-lucide="alert-circle" class="w-3 h-3 pulse-red"></i>`;
             box.className = "p-3 rounded-xl text-[10px] font-black flex items-center justify-between bg-red-50 text-red-600 mt-2";
         }
         lucide.createIcons();
@@ -376,7 +358,7 @@
         const diff = target - sum;
         const box = document.getElementById('stratValidation');
         if (Math.abs(diff) < 0.1) {
-            box.innerHTML = `<span>Sync OK</span> <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i>`;
+            box.innerHTML = `<span>Strat Sync OK</span> <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i>`;
             box.className = "p-3 rounded-xl text-[10px] font-black flex items-center justify-between bg-emerald-50 text-emerald-600 mt-2";
         } else {
             box.innerHTML = `<span>Off by ${Math.abs(diff).toFixed(1)}</span> <i data-lucide="alert-triangle" class="w-3 h-3 pulse-red"></i>`;
@@ -424,7 +406,7 @@
         const cards = [
             { label: state.mode === 'volume' ? 'Monthly Task Total' : 'Monthly Hour Total', val: (dailyInput * totalD).toLocaleString(), icon: 'target', color: 'text-blue-600' },
             { label: 'Daily Hour Demand', val: dailyDemand.toFixed(1) + ' HRS', icon: 'zap', color: 'text-blue-600' },
-            { label: 'Roster Daily Supply', val: netSupply.toFixed(1) + ' HRS', icon: 'users-2', color: 'text-emerald-600' },
+            { label: 'Daily Supply (Net)', val: netSupply.toFixed(1) + ' HRS', icon: 'users-2', color: 'text-emerald-600' },
             { label: 'Shift Health (Hrs)', val: (variance >= 0 ? '+' : '') + variance.toFixed(1), icon: 'activity', color: variance >= 0 ? 'text-emerald-500' : 'text-red-500' }
         ];
         sb.innerHTML = cards.map(c => `
