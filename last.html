@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPM Ultra Master | 2026 Strategy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; opacity: 0; }
+        .accordion-content.open { max-height: 4000px; opacity: 1; }
+        .rotate-180 { transform: rotate(180deg); }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .input-pill { border: 1px solid #e2e8f0; border-radius: 12px; transition: all 0.2s; font-weight: 800; text-align: center; outline: none; }
+        .input-pill:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: #f8fafc; }
+        .pulse-red { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { color: #ef4444; } 50% { color: #b91c1c; opacity: 0.8; } }
+        .input-edit { border-bottom: 2px solid transparent; transition: all 0.2s; cursor: text; font-weight: 800; }
+        .input-edit:focus { border-bottom-color: #3b82f6; outline: none; background: #f8fafc; }
+        .btn-toggle { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 900; transition: all 0.2s; border: 1px solid #e2e8f0; background: white; color: #94a3b8; }
+        .btn-toggle.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        /* Tab Styles */
+        .tab-btn { padding: 12px 20px; font-size: 10px; font-weight: 900; color: #64748b; border-bottom: 2px solid transparent; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
+        .tab-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; background: rgba(59, 130, 246, 0.03); }
+    </style>
+</head>
+<body class="bg-[#f8fafc] font-sans text-slate-900 p-4 md:p-8 min-h-screen uppercase tracking-tight">
+
+<div class="max-w-[1600px] mx-auto space-y-6">
+    <header class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-6">
+        <div class="flex items-center gap-5">
+            <div class="p-5 bg-blue-600 rounded-3xl shadow-xl shadow-blue-100">
+                <i data-lucide="zap" class="text-white w-8 h-8"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-black tracking-tighter italic uppercase text-slate-800">CPM <span class="text-blue-600">Ultra</span></h1>
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em]">Strategic Resource Framework • 2026</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 bg-slate-50 p-3 rounded-2xl border">
+            <div id="countryGrid" class="flex gap-2 text-white"></div>
+            <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
+            <select id="targetMonth" onchange="runAnalysis()" class="bg-transparent font-black text-blue-600 text-sm outline-none cursor-pointer"></select>
+        </div>
+    </header>
+
+    <div id="scoreboard" class="grid grid-cols-1 md:grid-cols-4 gap-4"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <aside class="lg:col-span-4 space-y-4">
+            <div class="bg-white rounded-[1.5rem] shadow-sm border overflow-hidden">
+                <div onclick="toggleAcc('basics')" class="p-5 flex justify-between items-center cursor-pointer bg-slate-50/50 hover:bg-slate-50">
+                    <span class="text-[11px] font-black uppercase tracking-widest flex items-center gap-3"><i data-lucide="sliders" class="w-4 h-4 text-slate-500"></i> Global Basics</span>
+                    <i data-lucide="chevron-down" id="arrow-basics" class="w-4 h-4 transition-transform"></i>
+                </div>
+                <div id="sec-basics" class="accordion-content open p-6 space-y-6">
+                    <div class="bg-slate-100 p-1.5 rounded-2xl flex gap-1">
+                        <button onclick="setMode('volume')" id="btn-vol" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all bg-white text-blue-600 shadow-sm uppercase">Volume Mode</button>
+                        <button onclick="setMode('hours')" id="btn-hrs" class="flex-1 py-2 text-[10px] font-black rounded-xl transition-all text-slate-500 uppercase">Hours Mode</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2 text-center">
+                            <label class="text-[9px] font-black text-slate-400 uppercase mb-2 block" id="label-dailyTarget">Target Daily Volume (Tasks)</label>
+                            <input type="number" id="dailyInput" value="5000" onchange="syncAll()" class="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-blue-600 outline-none text-center">
+                        </div>
+                        <div id="tptContainer">
+                            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1 block">Target TPT (Tasks/Hr)</label>
+                            <input type="number" id="globalTPT" value="20" onchange="validateRoster()" class="w-full p-2 bg-blue-50 border border-blue-100 rounded-xl font-bold text-blue-700 text-center">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1 block">Total CWs</label>
+                            <input type="number" id="totalCWHeadcount" value="30" onchange="syncAll()" class="w-full p-2 bg-slate-50 border rounded-xl font-bold text-center">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1 block">Working Days</label>
+                            <div class="flex gap-1">
+                                <button onclick="setWorkDays(5)" id="wd5" class="btn-toggle flex-1 active">5</button>
+                                <button onclick="setWorkDays(6)" id="wd6" class="btn-toggle flex-1">6</button>
+                                <button onclick="setWorkDays(7)" id="wd7" class="btn-toggle flex-1">7</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1 block">Work Holidays?</label>
+                            <div class="flex gap-1">
+                                <button onclick="setHolWork(false)" id="holNo" class="btn-toggle flex-1 active">NO</button>
+                                <button onclick="setHolWork(true)" id="holYes" class="btn-toggle flex-1">YES</button>
+                            </div>
+                        </div>
+                        <div class="col-span-2 pt-2 border-t" id="intensityBox" style="display:none">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase">Weekend Intensity</label>
+                                <span id="intVal" class="text-[10px] font-black text-blue-600">100%</span>
+                            </div>
+                            <input type="range" id="weekendIntensity" min="0" max="100" value="100" oninput="updateIntensity(this.value)" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        </div>
+                        <div class="col-span-1 border-t pt-2">
+                            <label class="text-[9px] font-bold text-slate-400 uppercase mb-1 block">Global Forfeit %</label>
+                            <input type="number" id="forfeit" value="10" onchange="validateRoster()" class="w-full p-2 bg-slate-50 border rounded-xl font-bold text-center">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[1.5rem] shadow-sm border overflow-hidden">
+                <div onclick="toggleAcc('roster')" class="p-5 flex justify-between items-center cursor-pointer bg-slate-50/50 hover:bg-slate-50">
+                    <span class="text-[11px] font-black uppercase tracking-widest flex items-center gap-3 text-emerald-600"><i data-lucide="users-2" class="w-4 h-4"></i> Operational Availability</span>
+                    <i data-lucide="chevron-down" id="arrow-roster" class="w-4 h-4 transition-transform"></i>
+                </div>
+                <div id="sec-roster" class="accordion-content open p-6 space-y-4">
+                    <div class="flex justify-between items-center bg-emerald-50 p-2 rounded-xl px-4 text-emerald-700">
+                        <span class="text-[10px] font-black uppercase tracking-tighter">Num Shift Sections</span>
+                        <input type="number" id="rosterCount" value="4" min="1" max="8" onchange="renderRoster()" class="w-12 p-1 bg-white border rounded text-center font-bold">
+                    </div>
+                    <div id="rosterContainer" class="space-y-2"></div>
+                    <div id="rosterSummaryList" class="pt-4 border-t border-slate-100 space-y-3 px-1">
+                        <div class="flex justify-between items-center text-[10px] font-black uppercase"><span class="text-slate-400 tracking-widest">Headcount Alignment:</span><span id="hcStatusLine"></span></div>
+                        <div class="flex justify-between items-center text-[10px] font-black uppercase"><span class="text-slate-400 tracking-widest">Net Hours Available:</span><span id="dailyAvailLine" class="text-blue-600"></span></div>
+                        <div class="flex justify-between items-center text-[10px] font-black border-t border-slate-50 pt-2"><span class="text-slate-400 tracking-widest uppercase">Capacity to Deliver:</span><span id="volCapacityLine"></span></div>
+                        <div id="hrStatusLine" class="text-[11px] font-black italic tracking-tighter pt-1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[1.5rem] shadow-sm border overflow-hidden">
+                <div onclick="toggleAcc('usecase')" class="p-5 flex justify-between items-center cursor-pointer bg-slate-50/50">
+                    <span class="text-[11px] font-black uppercase tracking-widest flex items-center gap-3 text-blue-600"><i data-lucide="box" class="w-4 h-4"></i> Use Case Provision</span>
+                    <i data-lucide="chevron-down" id="arrow-usecase" class="w-4 h-4 transition-transform"></i>
+                </div>
+                <div id="sec-usecase" class="accordion-content open p-6 space-y-4">
+                    <div class="flex justify-between items-center bg-blue-50 p-2 rounded-xl px-4 text-blue-700">
+                        <span class="text-[10px] font-black uppercase tracking-tighter">Num Use Cases</span>
+                        <input type="number" id="ucCount" value="2" min="1" max="12" onchange="renderUCs()" class="w-12 p-1 bg-white border rounded text-center font-bold">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 px-2 text-[8px] font-black text-slate-400 uppercase text-center italic">
+                        <span>Daily Vol/Hrs</span><span>Avg AHT / Wt%</span><span>Buffer %</span>
+                    </div>
+                    <div id="ucContainer" class="space-y-3"></div>
+                    <div id="ucValidation" class="p-3 rounded-xl text-[10px] font-black uppercase flex items-center justify-between border"></div>
+                </div>
+            </div>
+
+            <div id="shiftStratSec" class="bg-white rounded-[1.5rem] shadow-sm border overflow-hidden">
+                <div onclick="toggleAcc('strat')" class="p-5 flex justify-between items-center cursor-pointer bg-slate-50/50 hover:bg-slate-50">
+                    <span class="text-[11px] font-black uppercase tracking-widest flex items-center gap-3 text-purple-600"><i data-lucide="clock" class="w-4 h-4"></i> Shift Breakdown</span>
+                    <i data-lucide="chevron-down" id="arrow-strat" class="w-4 h-4 transition-transform"></i>
+                </div>
+                <div id="sec-strat" class="accordion-content open p-6 space-y-4">
+                    <div class="flex bg-slate-100 p-1 rounded-xl">
+                        <button onclick="setShiftMode('number')" id="sModeNum" class="flex-1 py-1 text-[9px] font-black rounded-lg bg-white text-purple-600 shadow-sm uppercase">Numbers</button>
+                        <button onclick="setShiftMode('percent')" id="sModePerc" class="flex-1 py-1 text-[9px] font-black rounded-lg text-slate-500 uppercase">Percent %</button>
+                    </div>
+                    <div id="shiftStratContainer" class="space-y-2"></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="lg:col-span-8 bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+            <div class="flex border-b border-slate-100 bg-slate-50/50 overflow-x-auto">
+                <button onclick="switchTab('weekly')" id="tab-weekly" class="tab-btn active border-b-2">Weekly Timeline</button>
+                <button onclick="switchTab('summary')" id="tab-summary" class="tab-btn">Overall Summary</button>
+                <button class="tab-btn opacity-50 cursor-not-allowed">Coming Soon</button>
+                <button class="tab-btn opacity-50 cursor-not-allowed">Coming Soon</button>
+            </div>
+
+            <div class="p-8 flex-1">
+                <div id="view-weekly" class="tab-view">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b">
+                                <tr><th class="py-6">Timeline</th><th class="text-center">Net Working Days</th><th class="text-center">Demand Hours</th><th class="text-right px-10">Target FTE</th></tr>
+                            </thead>
+                            <tbody id="tableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="view-summary" class="tab-view hidden space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 space-y-4">
+                            <h4 class="text-[10px] font-black tracking-widest uppercase text-slate-400">Scaling Directive</h4>
+                            <div id="summaryScale" class="text-lg font-black tracking-tight leading-tight"></div>
+                        </div>
+                        <div class="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 space-y-4">
+                            <h4 class="text-[10px] font-black tracking-widest uppercase text-slate-400">System Efficiency</h4>
+                            <div id="summaryEfficiency" class="text-3xl font-black tracking-tighter text-blue-600"></div>
+                        </div>
+                    </div>
+                    <div class="p-8 bg-slate-900 rounded-[2rem] text-white space-y-4">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400"></i>
+                            <h4 class="text-[10px] font-black tracking-[0.2em] uppercase">Fulfillment Risk Assessment</h4>
+                        </div>
+                        <div id="summaryHolidayRisk" class="text-[11px] font-black italic text-slate-400 tracking-tight leading-relaxed uppercase"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const CODES = ['KE', 'NP', 'CO', 'PH', 'US'];
+
+    let state = {
+        mode: 'volume',
+        shiftMode: 'number',
+        activeMonth: new Date().getMonth(),
+        selectedCountries: ['KE', 'NP', 'CO', 'PH', 'US'],
+        allHolidays: {},
+        workDays: 5,
+        workHolidays: false,
+        intensity: 1,
+        activeTab: 'weekly'
+    };
+
+    function toggleAcc(id) {
+        document.getElementById(`sec-${id}`).classList.toggle('open');
+        document.getElementById(`arrow-${id}`).classList.toggle('rotate-180');
+    }
+
+    function switchTab(tabId) {
+        state.activeTab = tabId;
+        document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'border-b-2'));
+        document.getElementById(`view-${tabId}`).classList.remove('hidden');
+        document.getElementById(`tab-${tabId}`).classList.add('active', 'border-b-2');
+    }
+
+    function distributeInteger(total, count) {
+        let base = Math.floor(total / count);
+        let rem = Math.round(total % count);
+        let arr = new Array(count).fill(base);
+        for(let i=0; i<rem; i++) arr[i]++;
+        return arr;
+    }
+
+    async function init() {
+        const mSel = document.getElementById('targetMonth');
+        MONTHS.forEach((m, i) => mSel.innerHTML += `<option value="${i}" ${i === state.activeMonth ? 'selected' : ''}>${m} 2026</option>`);
+        const cG = document.getElementById('countryGrid');
+        CODES.forEach(code => {
+            cG.innerHTML += `<button onclick="toggleCountry('${code}')" id="tag-${code}" class="px-3 py-1.5 rounded-xl text-[10px] font-black border bg-blue-600 text-white border-blue-200 shadow-sm">${code}</button>`;
+            fetchHolidays(code);
+        });
+        setTimeout(() => { syncAll(); lucide.createIcons(); }, 150);
+    }
+
+    function setWorkDays(d) {
+        state.workDays = d;
+        [5,6,7].forEach(v => document.getElementById('wd'+v).className = 'btn-toggle flex-1' + (v===d ? ' active' : ''));
+        document.getElementById('intensityBox').style.display = d > 5 ? 'block' : 'none';
+        runAnalysis();
+    }
+
+    function setHolWork(b) {
+        state.workHolidays = b;
+        document.getElementById('holYes').className = 'btn-toggle flex-1' + (b ? ' active' : '');
+        document.getElementById('holNo').className = 'btn-toggle flex-1' + (!b ? ' active' : '');
+        runAnalysis();
+    }
+
+    function updateIntensity(v) {
+        state.intensity = v / 100;
+        document.getElementById('intVal').innerText = v + '%';
+        runAnalysis();
+    }
+
+    function syncAll() {
+        renderRoster();
+        renderUCs();
+        renderShifts();
+        runAnalysis();
+    }
+
+    async function fetchHolidays(code) {
+        try {
+            const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/2026/${code}`);
+            const data = await res.json();
+            state.allHolidays[code] = data.map(h => h.date);
+            runAnalysis();
+        } catch (e) {}
+    }
+
+    function toggleCountry(code) {
+        const btn = document.getElementById(`tag-${code}`);
+        if (state.selectedCountries.includes(code)) {
+            state.selectedCountries = state.selectedCountries.filter(c => c !== code);
+            btn.className = "px-3 py-1.5 rounded-xl text-[10px] font-black border bg-white text-slate-400 border-slate-200";
+        } else {
+            state.selectedCountries.push(code);
+            btn.className = "px-3 py-1.5 rounded-xl text-[10px] font-black border bg-blue-600 text-white border-blue-200 shadow-sm";
+        }
+        runAnalysis();
+    }
+
+    function setMode(m) {
+        state.mode = m;
+        document.getElementById('btn-vol').className = m === 'volume' ? 'flex-1 py-2 text-[10px] font-black rounded-xl transition-all bg-white text-blue-600 shadow-sm uppercase' : 'flex-1 py-2 text-[10px] font-black rounded-xl transition-all text-slate-500 uppercase';
+        document.getElementById('btn-hrs').className = m === 'hours' ? 'flex-1 py-2 text-[10px] font-black rounded-xl bg-white text-blue-600 shadow-sm uppercase' : 'flex-1 py-2 text-[10px] font-black rounded-xl transition-all text-slate-500 uppercase';
+        document.getElementById('label-dailyTarget').innerText = m === 'volume' ? 'Target Daily Volume (Tasks)' : 'Target Daily Hours';
+        document.getElementById('shiftStratSec').style.display = m === 'volume' ? 'block' : 'none';
+        document.getElementById('tptContainer').style.display = m === 'volume' ? 'block' : 'none';
+        syncAll();
+    }
+
+    function setShiftMode(m) {
+        state.shiftMode = m;
+        document.getElementById('sModeNum').className = m === 'number' ? 'flex-1 py-1 text-[9px] font-black rounded-lg bg-white text-purple-600 shadow-sm uppercase' : 'flex-1 py-1 text-[9px] font-black rounded-lg text-slate-500 uppercase';
+        document.getElementById('sModePerc').className = m === 'percent' ? 'flex-1 py-1 text-[9px] font-black rounded-lg text-slate-500 uppercase' : 'flex-1 py-1 text-[9px] font-black rounded-lg text-slate-500 uppercase';
+        renderShifts();
+    }
+
+    function renderRoster() {
+        let countInput = document.getElementById('rosterCount');
+        let count = parseInt(countInput.value);
+        if (count > 8) { count = 8; countInput.value = 8; }
+        const cont = document.getElementById('rosterContainer');
+        const totalHC = parseInt(document.getElementById('totalCWHeadcount').value) || 0;
+        cont.innerHTML = '';
+        const dist = distributeInteger(totalHC, count);
+        for (let i = 0; i < count; i++) {
+            let uniqueHr = 8 - i; 
+            cont.innerHTML += `<div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex-1"><input type="number" value="${uniqueHr}" onchange="validateRoster()" class="roster-hrs-val w-full input-pill p-1.5 text-xs text-emerald-600 font-black"></div>
+                    <div class="flex-1 text-center font-black text-slate-300">×</div>
+                    <div class="flex-1"><input type="number" value="${dist[i]}" onchange="validateRoster()" class="roster-hc-val w-full input-pill p-1.5 text-xs text-slate-900 font-black"></div>
+                </div>`;
+        }
+        validateRoster();
+    }
+
+    function validateRoster() {
+        const targetHC = parseInt(document.getElementById('totalCWHeadcount').value) || 0;
+        const targetDailyInput = parseFloat(document.getElementById('dailyInput').value) || 0;
+        const forfeit = parseFloat(document.getElementById('forfeit').value) / 100;
+        const tpt = parseFloat(document.getElementById('globalTPT').value) || 1;
+        const hcInputs = document.querySelectorAll('.roster-hc-val');
+        const hrInputs = document.querySelectorAll('.roster-hrs-val');
+        let sumHC = 0; let grossHrs = 0;
+        hcInputs.forEach((inp, i) => {
+            let hc = parseInt(inp.value) || 0;
+            let hr = parseFloat(hrInputs[i].value) || 0;
+            sumHC += hc; grossHrs += (hc * hr);
+        });
+        const netHrs = grossHrs * (1 - forfeit);
+        const hcDiff = targetHC - sumHC;
+        document.getElementById('hcStatusLine').innerText = `${sumHC} / ${targetHC} CWs`;
+        document.getElementById('hcStatusLine').className = `${Math.abs(hcDiff) < 1 ? 'text-emerald-600' : 'text-red-500'}`;
+        document.getElementById('dailyAvailLine').innerText = `${netHrs.toFixed(1)} HRS`;
+        if (state.mode === 'volume') {
+            const taskCap = Math.round(netHrs * tpt);
+            const volDiff = taskCap - targetDailyInput;
+            document.getElementById('volCapacityLine').innerText = `${taskCap.toLocaleString()} Tasks`;
+            document.getElementById('volCapacityLine').className = `text-blue-600`;
+            document.getElementById('hrStatusLine').innerText = volDiff >= 0 ? `Surplus: +${volDiff.toLocaleString()} Tasks` : `Deficit: ${Math.abs(volDiff).toLocaleString()} Tasks`;
+            document.getElementById('hrStatusLine').className = `text-[11px] font-black italic tracking-tighter pt-1 ${volDiff >= 0 ? 'text-emerald-600' : 'text-red-500 pulse-red'}`;
+        } else {
+            const hrDiff = netHrs - targetDailyInput;
+            document.getElementById('volCapacityLine').innerText = `${netHrs.toFixed(1)} HRS`;
+            document.getElementById('hrStatusLine').innerText = hrDiff >= 0 ? `Surplus: +${hrDiff.toFixed(1)} HRS` : `Deficit: ${Math.abs(hrDiff).toFixed(1)} HRS`;
+            document.getElementById('hrStatusLine').className = `text-[11px] font-black italic tracking-tighter pt-1 ${hrDiff >= 0 ? 'text-emerald-600' : 'text-red-500'}`;
+        }
+        runAnalysis();
+    }
+
+    function renderUCs() {
+        const count = parseInt(document.getElementById('ucCount').value);
+        const cont = document.getElementById('ucContainer');
+        const target = parseFloat(document.getElementById('dailyInput').value) || 0;
+        cont.innerHTML = '';
+        const dist = distributeInteger(target, count);
+        for (let i = 0; i < count; i++) {
+            cont.innerHTML += `<div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                    <input type="text" value="Use Case ${i+1}" class="w-full bg-transparent text-[10px] font-black text-blue-600 uppercase italic outline-none input-edit px-1">
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="number" value="${dist[i]}" onchange="validateUCs()" class="uc-vol-input p-2 text-[11px] font-black border rounded-xl outline-none text-center bg-white">
+                        <input type="number" value="15" onchange="runAnalysis()" class="p-2 text-[11px] font-black border rounded-xl outline-none text-center bg-white">
+                        <input type="number" value="10" onchange="runAnalysis()" class="p-2 text-[11px] font-black border rounded-xl outline-none text-center bg-white">
+                    </div></div>`;
+        }
+        validateUCs();
+    }
+
+    function validateUCs() {
+        const target = parseFloat(document.getElementById('dailyInput').value) || 0;
+        const inputs = document.querySelectorAll('.uc-vol-input');
+        let sum = 0; inputs.forEach(inp => sum += (parseFloat(inp.value) || 0));
+        const diff = target - sum;
+        const box = document.getElementById('ucValidation');
+        if (Math.abs(diff) < 1) {
+            box.innerHTML = `<span>Provisions Balanced</span> <i data-lucide="check-circle" class="w-3 h-3 text-emerald-500"></i>`;
+            box.className = "p-3 rounded-xl text-[10px] font-black flex items-center justify-between bg-emerald-50 text-emerald-600 mt-2 border border-emerald-100";
+        } else {
+            box.innerHTML = `<span>Off: ${Math.abs(diff).toFixed(0)}</span> <i data-lucide="alert-circle" class="w-3 h-3 pulse-red text-red-500"></i>`;
+            box.className = "p-3 rounded-xl text-[10px] font-black flex items-center justify-between bg-red-50 text-red-600 mt-2 border border-red-100";
+        }
+        lucide.createIcons();
+        runAnalysis();
+    }
+
+    function renderShifts() {
+        let countInput = document.getElementById('rosterCount');
+        let count = parseInt(countInput.value);
+        const cont = document.getElementById('shiftStratContainer');
+        const target = parseFloat(document.getElementById('dailyInput').value) || 0;
+        cont.innerHTML = '';
+        const dist = (state.shiftMode === 'number') ? distributeInteger(target, count) : new Array(count).fill((100 / count).toFixed(1));
+        for (let i = 0; i < count; i++) {
+            cont.innerHTML += `<div class="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                <input type="text" value="Shift ${i+1}" class="text-[9px] font-black text-purple-600 uppercase w-24 bg-transparent outline-none italic input-edit">
+                <input type="number" value="${dist[i]}" onchange="validateShifts()" class="shift-input flex-1 bg-white p-1 text-xs font-black border rounded-lg outline-none text-center">
+            </div>`;
+        }
+    }
+
+    function validateShifts() { runAnalysis(); }
+
+    function runAnalysis() {
+        const dailyInput = parseFloat(document.getElementById('dailyInput').value) || 0;
+        const tpt = parseFloat(document.getElementById('globalTPT').value) || 1;
+        const targetMonth = parseInt(document.getElementById('targetMonth').value);
+        const weeks = getStrictWeeks(2026, targetMonth);
+        
+        let activeHols = [];
+        state.selectedCountries.forEach(c => { if(state.allHolidays[c]) activeHols.push(...state.allHolidays[c]); });
+        activeHols = [...new Set(activeHols)];
+        
+        let totalMonthVolume = 0;
+        let totalMonthHrs = 0;
+        let workDaysInMonth = 0;
+        const tableBody = document.getElementById('tableBody');
+        tableBody.innerHTML = '';
+
+        weeks.forEach((w, i) => {
+            let weekHrs = 0; let weekD = 0;
+            w.days.forEach(d => {
+                const isHol = activeHols.includes(d.dateStr);
+                const isWkend = d.dayNum === 0 || d.dayNum === 6;
+                let active = false;
+                if (state.workDays === 5 && d.dayNum >= 1 && d.dayNum <= 5) active = true;
+                if (state.workDays === 6 && d.dayNum >= 1 && d.dayNum <= 6) active = true;
+                if (state.workDays === 7) active = true;
+                if (isHol && !state.workHolidays) active = false;
+                if (active) {
+                    weekD++;
+                    const multiplier = isWkend ? state.intensity : 1;
+                    weekHrs += (dailyInput / tpt) * multiplier;
+                }
+            });
+            totalMonthHrs += weekHrs; totalMonthVolume += (weekHrs * tpt);
+            workDaysInMonth += weekD;
+            const fte = (weekD > 0) ? (weekHrs / (weekD * 8)) : 0;
+            tableBody.innerHTML += `<tr class="hover:bg-slate-50 border-b">
+                    <td class="px-10 py-6 font-black italic uppercase">Week ${i+1}<br><span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${w.label}</span></td>
+                    <td class="px-10 py-6 text-center text-xs font-black text-slate-600">${weekD} Days</td>
+                    <td class="px-10 py-6 text-center font-mono font-black text-blue-600 uppercase">${Math.round(weekHrs)} HRS</td>
+                    <td class="px-10 py-6 text-right px-10"><span class="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">${fte.toFixed(1)} FTE</span></td></tr>`;
+        });
+
+        // SUMMARY CALCULATIONS
+        const forfeit = parseFloat(document.getElementById('forfeit').value) / 100;
+        const dailyDemand = (dailyInput / tpt);
+        let supplyHrs = 0;
+        let primaryShiftLen = 8;
+        const hrInputs = document.querySelectorAll('.roster-hrs-val');
+        const hcInputs = document.querySelectorAll('.roster-hc-val');
+        
+        hrInputs.forEach((inp, idx) => {
+            let h = parseFloat(inp.value) || 0;
+            let c = parseFloat(hcInputs[idx].value) || 0;
+            supplyHrs += (h * c);
+            if(idx === 0 && h > 0) primaryShiftLen = h;
+        });
+
+        const netSupply = supplyHrs * (1 - forfeit);
+        const dailyVariance = netSupply - dailyDemand;
+        const efficiency = (netSupply / dailyDemand) * 100;
+
+        // Scaling Directive
+        const scaleEl = document.getElementById('summaryScale');
+        if (Math.abs(dailyVariance) < 0.5) {
+            scaleEl.innerHTML = `<span class="text-emerald-500">OPTIMIZED</span><br><span class="text-[10px] text-slate-500 uppercase tracking-widest">Headcount perfectly aligned</span>`;
+        } else if (dailyVariance < 0) {
+            const hire = Math.ceil(Math.abs(dailyVariance) / primaryShiftLen);
+            scaleEl.innerHTML = `<span class="text-rose-500 font-black uppercase tracking-tighter">HIRE +${hire} CWs</span><br><span class="text-[9px] text-slate-500 uppercase tracking-widest italic">Targeting ${primaryShiftLen}hr shifts</span>`;
+        } else {
+            const off = Math.floor(dailyVariance / primaryShiftLen);
+            scaleEl.innerHTML = `<span class="text-amber-500 font-black uppercase tracking-tighter">OFFBOARD -${off} CWs</span><br><span class="text-[9px] text-slate-500 uppercase tracking-widest italic">Excess on ${primaryShiftLen}hr shifts</span>`;
+        }
+
+        document.getElementById('summaryEfficiency').innerText = efficiency.toFixed(1) + "%";
+
+        // Holiday Risk Logic
+        const holsInMonth = activeHols.filter(d => {
+            let dt = new Date(d);
+            return dt.getMonth() === targetMonth;
+        }).length;
+        
+        const riskEl = document.getElementById('summaryHolidayRisk');
+        if (!state.workHolidays && holsInMonth > 0) {
+            riskEl.innerHTML = `Identified ${holsInMonth} public holidays this month across selected regions. Total capacity risk is elevated. If not worked, monthly fulfillment will drop by approx ${((holsInMonth / (workDaysInMonth + holsInMonth)) * 100).toFixed(0)}%.`;
+        } else {
+            riskEl.innerText = "No active holiday shrinkage detected for the current month settings.";
+        }
+
+        // Scoreboard Update
+        const variance = netSupply - dailyDemand;
+        const cards = [
+            { label: state.mode === 'volume' ? 'Monthly Total' : 'Monthly Hrs', val: state.mode === 'volume' ? Math.round(totalMonthVolume).toLocaleString() : Math.round(totalMonthHrs).toLocaleString(), icon: 'target', color: 'text-blue-600' },
+            { label: 'Daily Demand', val: dailyDemand.toFixed(1) + ' HRS', icon: 'zap', color: 'text-blue-600' },
+            { label: 'Daily Supply', val: netSupply.toFixed(1) + ' HRS', icon: 'users-2', color: 'text-emerald-600' },
+            { label: 'Shift Health', val: (variance >= 0 ? '+' : '') + variance.toFixed(1), icon: 'activity', color: variance >= 0 ? 'text-emerald-500' : 'text-red-500' }
+        ];
+        document.getElementById('scoreboard').innerHTML = cards.map(c => `<div class="bg-white p-6 rounded-[2rem] border shadow-sm"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 italic leading-none">${c.label}</p><div class="flex items-center gap-3 mt-1"><i data-lucide="${c.icon}" class="w-4 h-4 ${c.color}"></i><h3 class="text-xl font-black italic tracking-tighter">${c.val}</h3></div></div>`).join('');
+        lucide.createIcons();
+    }
+
+    function getStrictWeeks(y, m) {
+        let weeks = [];
+        let cur = new Date(y, m, 1);
+        let last = new Date(y, m + 1, 0);
+        while (cur <= last) {
+            let start = new Date(cur);
+            let weekDays = [];
+            for (let i = 0; i < 7; i++) {
+                if (cur.getMonth() !== m) break;
+                weekDays.push({ dateStr: cur.toISOString().split('T')[0], dayNum: cur.getDay() });
+                if (cur.getDay() === 0) { cur.setDate(cur.getDate()+1); break; }
+                cur.setDate(cur.getDate()+1);
+            }
+            let end = new Date(cur); end.setDate(end.getDate()-1);
+            weeks.push({ label: `${start.getDate()} - ${end.getMonth() === m ? end.getDate() : last.getDate()}`, days: weekDays });
+        }
+        return weeks;
+    }
+    window.onload = init;
+</script>
+</body>
+</html>
