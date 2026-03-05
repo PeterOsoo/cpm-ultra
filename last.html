@@ -26,7 +26,7 @@
 <body class="bg-[#f8fafc] font-sans text-slate-900 p-4 md:p-8 min-h-screen uppercase tracking-tight">
 
 <div class="max-w-[1600px] mx-auto space-y-6">
-    <header class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-6">
+    <header class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-6 text-center lg:text-left">
         <div class="flex items-center gap-5">
             <div class="p-5 bg-blue-600 rounded-3xl shadow-xl shadow-blue-100">
                 <i data-lucide="zap" class="text-white w-8 h-8"></i>
@@ -128,7 +128,7 @@
                 <div id="sec-usecase" class="accordion-content open p-6 space-y-4">
                     <div class="flex justify-between items-center bg-blue-50 p-2 rounded-xl px-4 text-blue-700">
                         <span class="text-[10px] font-black uppercase tracking-tighter">Num Use Cases</span>
-                        <input type="number" id="ucCount" value="2" min="1" max="12" onchange="renderUCs()" class="w-12 p-1 bg-white border rounded text-center font-bold">
+                        <input type="number" id="ucCount" value="2" min="1" onchange="renderUCs()" class="w-12 p-1 bg-white border rounded text-center font-bold">
                     </div>
                     <div class="grid grid-cols-3 gap-2 px-2 text-[8px] font-black text-slate-400 uppercase text-center italic">
                         <span>Daily Vol/Hrs</span><span>Avg AHT / Wt%</span><span>Buffer %</span>
@@ -323,13 +323,15 @@
     function setShiftMode(m) {
         state.shiftMode = m;
         document.getElementById('sModeNum').className = m === 'number' ? 'flex-1 py-1 text-[9px] font-black rounded-lg bg-white text-purple-600 shadow-sm uppercase' : 'flex-1 py-1 text-[9px] font-black rounded-lg text-slate-500 uppercase';
-        document.getElementById('sModePerc').className = m === 'percent' ? 'flex-1 py-1 text-[9px] font-black rounded-lg bg-white text-purple-600 shadow-sm uppercase' : 'flex-1 py-1 text-[9px] font-black rounded-lg text-slate-500 uppercase';
+        document.getElementById('sModePerc').className = m === 'percent' ? 'flex-1 py-1 text-[9px] font-black rounded-lg text-slate-500 uppercase' : 'flex-1 py-1 text-[9px] font-black rounded-lg text-slate-500 uppercase';
         renderShifts();
     }
 
-    // SMART UPDATE: OPERATIONAL AVAILABILITY
+    // SMART UPDATE: OPERATIONAL AVAILABILITY (CAPPED AT 8)
     function renderRoster() {
-        let count = parseInt(document.getElementById('rosterCount').value) || 1;
+        let countInput = document.getElementById('rosterCount');
+        let count = parseInt(countInput.value) || 1;
+        if (count > 8) { count = 8; countInput.value = 8; }
         const cont = document.getElementById('rosterContainer');
         const existingRows = cont.querySelectorAll('.roster-row');
         const targetHC = parseInt(document.getElementById('totalCWHeadcount').value) || 0;
@@ -386,9 +388,10 @@
         runAnalysis();
     }
 
-    // SMART UPDATE: USE CASE PROVISIONS
+    // SMART UPDATE: USE CASE PROVISIONS (NO CAP)
     function renderUCs() {
-        let count = parseInt(document.getElementById('ucCount').value) || 1;
+        let countInput = document.getElementById('ucCount');
+        let count = parseInt(countInput.value) || 1;
         const cont = document.getElementById('ucContainer');
         const existingRows = cont.querySelectorAll('.uc-row');
         const target = parseFloat(document.getElementById('dailyInput').value) || 0;
@@ -430,9 +433,11 @@
         runAnalysis();
     }
 
-    // SMART UPDATE: SHIFT BLOCKS
+    // SMART UPDATE: SHIFT BLOCKS (CAPPED AT 12)
     function renderShifts() {
-        let count = parseInt(document.getElementById('shiftBlockCount').value) || 1;
+        let countInput = document.getElementById('shiftBlockCount');
+        let count = parseInt(countInput.value) || 1;
+        if (count > 12) { count = 12; countInput.value = 12; }
         const cont = document.getElementById('shiftStratContainer');
         const existingRows = cont.querySelectorAll('.shift-row');
         const target = parseFloat(document.getElementById('dailyInput').value) || 0;
@@ -506,7 +511,7 @@
         });
         const netGlobalSupply = globalSupplyHrs * (1 - forfeit);
 
-        // --- UPDATED BY USE CASE LOGIC ---
+        // --- BY USE CASE LOGIC ---
         const ucListCont = document.getElementById('uc-list-container');
         if (ucListCont) {
             ucListCont.innerHTML = '';
@@ -522,7 +527,6 @@
 
                 let rawReqHrs = (state.mode === 'volume') ? ((vol * aht) / 3600) : vol;
                 let streamReqHrs = rawReqHrs * (1 + (buffer / 100));
-                
                 totalProvisionHrs += streamReqHrs;
                 totalAssignedVol += vol;
 
