@@ -163,7 +163,7 @@
                 <button onclick="switchTab('weekly')" id="tab-weekly" class="tab-btn active border-b-2">Weekly Timeline</button>
                 <button onclick="switchTab('usecase')" id="tab-usecase" class="tab-btn">By Use Case</button>
                 <button onclick="switchTab('summary')" id="tab-summary" class="tab-btn">Overall Summary</button>
-                <button class="tab-btn opacity-50 cursor-not-allowed">Block Dist (Soon)</button>
+                <button onclick="switchTab('blocks')" id="tab-blocks" class="tab-btn">Block Dist</button>
             </div>
 
             <div class="p-8 flex-1">
@@ -194,7 +194,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 space-y-4">
                             <h4 class="text-[10px] font-black tracking-widest uppercase text-slate-400">Workstream scaling Directive</h4>
-                            <div id="summaryScale" class="text-xl font-black tracking-tight leading-snug text-slate-800"></div>
+                            <div id="summaryScale" class="text-xl font-black tracking-tight leading-snug"></div>
                         </div>
                         <div class="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 space-y-4">
                             <h4 class="text-[10px] font-black tracking-widest uppercase text-slate-400">System Efficiency index</h4>
@@ -209,6 +209,10 @@
                         </div>
                         <div id="summaryHolidayRisk" class="text-[11px] font-black italic text-slate-300 tracking-tight leading-relaxed uppercase"></div>
                     </div>
+                </div>
+
+                <div id="view-blocks" class="tab-view hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="block-list-container"></div>
                 </div>
             </div>
         </main>
@@ -322,7 +326,6 @@
         syncAll();
     }
 
-    // FUNCTIONAL SHIFT MODE TOGGLE
     function setShiftMode(m) {
         const totalTarget = parseFloat(document.getElementById('dailyInput').value) || 1;
         const inputs = document.querySelectorAll('.shift-input');
@@ -470,7 +473,7 @@
                 const div = document.createElement('div');
                 div.className = "shift-row flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100";
                 div.innerHTML = `
-                    <input type="text" value="Shift ${i+1}" class="text-[9px] font-black text-purple-600 uppercase w-24 bg-transparent outline-none italic input-edit px-1">
+                    <input type="text" value="Shift ${i+1}" oninput="runAnalysis()" class="shift-name-input text-[9px] font-black text-purple-600 uppercase w-24 bg-transparent outline-none italic input-edit px-1">
                     <input type="number" value="${dist[i]}" oninput="validateShifts()" class="shift-input flex-1 bg-white p-1 text-xs font-black border rounded-lg outline-none text-center shadow-sm">
                 `;
                 cont.appendChild(div);
@@ -549,7 +552,6 @@
         });
         const netGlobalSupply = globalSupplyHrs * (1 - forfeit);
 
-        // BY USE CASE PORTFOLIO
         const ucListCont = document.getElementById('uc-list-container');
         if (ucListCont) {
             ucListCont.innerHTML = '';
@@ -570,79 +572,72 @@
                 const allocated = netGlobalSupply * share;
                 const isShort = streamReqHrs > (allocated + 0.1);
                 const hourGap = Math.abs(streamReqHrs - allocated);
-                ucListCont.innerHTML += `
-                    <div class="p-6 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm space-y-4">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="text-[8px] font-black px-2 py-1 bg-slate-100 rounded-lg text-slate-500 uppercase tracking-widest mb-2 inline-block">Use Case ${i+1}</span>
-                                <h5 class="text-xs font-black italic uppercase text-slate-800 truncate w-32">${name}</h5>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-xs font-black ${isShort ? 'text-rose-500' : 'text-emerald-500'} italic">${streamReqHrs.toFixed(1)} HRS</div>
-                                <div class="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mt-1">Buffered Load</div>
-                            </div>
+                ucListCont.innerHTML += `<div class="p-6 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm space-y-4"><div class="flex justify-between items-start"><div><span class="text-[8px] font-black px-2 py-1 bg-slate-100 rounded-lg text-slate-500 uppercase tracking-widest mb-2 inline-block">Use Case ${i+1}</span><h5 class="text-xs font-black italic uppercase text-slate-800 truncate w-32">${name}</h5></div><div class="text-right"><div class="text-xs font-black ${isShort ? 'text-rose-500' : 'text-emerald-500'} italic">${streamReqHrs.toFixed(1)} HRS</div><div class="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mt-1">Buffered Load</div></div></div><div class="pt-3 border-t border-slate-50"><div class="flex justify-between items-end text-[10px] font-black mb-2"><div class="leading-none"><span class="text-slate-400 uppercase block mb-1">Gap Analysis</span><span class="${isShort ? 'text-rose-600' : 'text-emerald-600'}">${isShort ? 'Short ' + hourGap.toFixed(1) + ' hrs' : 'Requirement Covered'}</span></div>${isShort && state.mode === 'volume' ? `<span class="text-[8px] text-rose-300 font-bold italic mb-0.5">Deficit: ~${Math.round(hourGap * (3600/aht)).toLocaleString()} Tasks</span>` : ''}</div><div class="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden"><div class="h-full ${isShort ? 'bg-rose-500' : 'bg-emerald-500'}" style="width: ${Math.min(100, (allocated/streamReqHrs)*100)}%"></div></div></div></div>`;
+            });
+            document.getElementById('uc-total-demand').innerText = (state.mode === 'volume') ? `${totalProvisionHrs.toFixed(1)} HRS / ${totalAssignedVol.toLocaleString()} TASKS` : `${totalProvisionHrs.toFixed(1)} HRS TOTAL`;
+            document.getElementById('uc-supply-status').innerText = `${totalProvisionHrs > 0 ? ((netGlobalSupply / totalProvisionHrs) * 100).toFixed(1) : 0}% Match`;
+        }
+
+        const blockCont = document.getElementById('block-list-container');
+        if (blockCont) {
+            blockCont.innerHTML = '';
+            const shiftRows = document.querySelectorAll('.shift-row');
+            shiftRows.forEach((row, i) => {
+                const name = row.querySelector('.shift-name-input').value;
+                const val = parseFloat(row.querySelector('.shift-input').value) || 0;
+                let blockVol = (state.shiftMode === 'percent') ? (dailyInput * (val / 100)) : val;
+                let blockHrs = blockVol / tpt;
+                let blockCWs = blockHrs / 8;
+                
+                blockCont.innerHTML += `
+                    <div class="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h5 class="text-xs font-black text-purple-600 uppercase italic">${name}</h5>
+                            <span class="text-[10px] font-bold text-slate-400">Block ${i+1}</span>
                         </div>
-                        <div class="pt-3 border-t border-slate-50">
-                            <div class="flex justify-between items-end text-[10px] font-black mb-2">
-                                <div class="leading-none"><span class="text-slate-400 uppercase block mb-1">Gap Analysis</span>
-                                <span class="${isShort ? 'text-rose-600' : 'text-emerald-600'}">
-                                    ${isShort ? 'Short ' + hourGap.toFixed(1) + ' hrs' : 'Requirement Covered'}
-                                </span></div>
-                                ${isShort && state.mode === 'volume' ? `<span class="text-[8px] text-rose-300 font-bold italic mb-0.5">Deficit: ~${Math.round(hourGap * (3600/aht)).toLocaleString()} Tasks</span>` : ''}
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-[8px] font-bold text-slate-400 uppercase">Volume Load</div>
+                                <div class="text-sm font-black italic text-slate-800">${Math.round(blockVol).toLocaleString()}</div>
                             </div>
-                            <div class="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
-                                <div class="h-full ${isShort ? 'bg-rose-500' : 'bg-emerald-500'}" style="width: ${Math.min(100, (allocated/streamReqHrs)*100)}%"></div>
+                            <div>
+                                <div class="text-[8px] font-bold text-slate-400 uppercase">Prod Hours</div>
+                                <div class="text-sm font-black italic text-slate-800">${blockHrs.toFixed(1)} HRS</div>
+                            </div>
+                            <div class="col-span-2 pt-2 border-t border-slate-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] font-black text-slate-500 uppercase">Needed CWs</span>
+                                    <span class="px-3 py-1 bg-slate-900 text-white text-[10px] font-black rounded-lg tracking-widest">${blockCWs.toFixed(1)} FTE</span>
+                                </div>
                             </div>
                         </div>
                     </div>`;
             });
-            document.getElementById('uc-total-demand').innerText = (state.mode === 'volume') ? `${totalProvisionHrs.toFixed(1)} HRS / ${totalAssignedVol.toLocaleString()} TASKS` : `${totalProvisionHrs.toFixed(1)} HRS TOTAL`;
-            document.getElementById('uc-supply-status').innerText = `${totalProvisionHrs > 0 ? ((netGlobalSupply / totalProvisionHrs) * 100).toFixed(1) : 0}% Match`;
         }
 
         const demandHrs = (state.mode === 'volume') ? (dailyInput / tpt) : dailyInput;
         const variance = netGlobalSupply - demandHrs;
         const efficiency = (netGlobalSupply / demandHrs) * 100;
         const scaleEl = document.getElementById('summaryScale');
-
-        if (Math.abs(variance) < 0.5) {
-            scaleEl.innerHTML = `<span class="text-emerald-500 font-black italic">OPTIMIZED</span><br><span class="text-[9px] text-slate-400 font-black uppercase">Current roster fulfills demand.</span>`;
-        } else {
-            let rem = Math.abs(variance);
-            let action = variance < 0 ? 'HIRE' : 'OFFBOARD';
-            let color = variance < 0 ? 'text-rose-500' : 'text-amber-500';
-            let directive = `<div class="${color} font-black uppercase mb-1 leading-none tracking-tight">${action} DIRECTIVE</div>`;
-            directive += `<div class="text-slate-800 font-black text-sm">${Math.abs(variance).toFixed(1)} Hours Variance</div>`;
-            scaleEl.innerHTML = directive;
-        }
-
+        if (Math.abs(variance) < 0.5) { scaleEl.innerHTML = `<span class="text-emerald-500 font-black italic">OPTIMIZED</span><br><span class="text-[9px] text-slate-400 font-black uppercase">Current roster fulfills demand.</span>`; }
+        else { let action = variance < 0 ? 'HIRE' : 'OFFBOARD'; let color = variance < 0 ? 'text-rose-500' : 'text-amber-500'; scaleEl.innerHTML = `<div class="${color} font-black uppercase mb-1 leading-none tracking-tight">${action} DIRECTIVE</div><div class="text-slate-800 font-black text-sm">${Math.abs(variance).toFixed(1)} Hours Variance</div>`; }
         document.getElementById('summaryEfficiency').innerHTML = `${isFinite(efficiency) ? efficiency.toFixed(1) : 0}%<div class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">${variance < 0 ? 'Deficit' : 'Surplus'}: ${Math.abs(variance).toFixed(1)} HRS (${Math.abs(Math.round(variance * tpt)).toLocaleString()} Tasks)</div>`;
-
         const cards = [
             { label: 'Daily Demand', val: demandHrs.toFixed(1) + ' HRS', icon: 'zap', color: 'text-blue-600' },
             { label: 'Daily Supply', val: netGlobalSupply.toFixed(1) + ' HRS', icon: 'users-2', color: 'text-emerald-600' },
             { label: 'Shift Health', val: (variance >= 0 ? '+' : '') + variance.toFixed(1), icon: 'activity', color: variance >= 0 ? 'text-emerald-500' : 'text-red-500' },
-            { label: 'Month Target', val: (workDaysInMonth * dailyInput).toLocaleString(), icon: 'target', color: 'text-blue-600' }
+            { label: 'Month Target', val: Math.round(workDaysInMonth * dailyInput).toLocaleString(), icon: 'target', color: 'text-blue-600' }
         ];
         document.getElementById('scoreboard').innerHTML = cards.map(c => `<div class="bg-white p-6 rounded-[2rem] border shadow-sm"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 italic leading-none">${c.label}</p><div class="flex items-center gap-3 mt-1"><i data-lucide="${c.icon}" class="w-4 h-4 ${c.color}"></i><h3 class="text-xl font-black italic tracking-tighter">${c.val}</h3></div></div>`).join('');
         lucide.createIcons();
     }
 
     function getStrictWeeks(y, m) {
-        let weeks = [];
-        let cur = new Date(y, m, 1);
-        let last = new Date(y, m + 1, 0);
+        let weeks = []; let cur = new Date(y, m, 1); let last = new Date(y, m + 1, 0);
         while (cur <= last) {
-            let start = new Date(cur);
-            let weekDays = [];
-            for (let i = 0; i < 7; i++) {
-                if (cur.getMonth() !== m) break;
-                weekDays.push({ dateStr: cur.toISOString().split('T')[0], dayNum: cur.getDay() });
-                if (cur.getDay() === 0) { cur.setDate(cur.getDate()+1); break; }
-                cur.setDate(cur.getDate()+1);
-            }
-            let end = new Date(cur); end.setDate(end.getDate()-1);
-            weeks.push({ label: `${start.getDate()} - ${end.getMonth() === m ? end.getDate() : last.getDate()}`, days: weekDays });
+            let start = new Date(cur); let weekDays = [];
+            for (let i = 0; i < 7; i++) { if (cur.getMonth() !== m) break; weekDays.push({ dateStr: cur.toISOString().split('T')[0], dayNum: cur.getDay() }); if (cur.getDay() === 0) { cur.setDate(cur.getDate()+1); break; } cur.setDate(cur.getDate()+1); }
+            let end = new Date(cur); end.setDate(end.getDate()-1); weeks.push({ label: `${start.getDate()} - ${end.getMonth() === m ? end.getDate() : last.getDate()}`, days: weekDays });
         }
         return weeks;
     }
