@@ -19,7 +19,6 @@
         .input-edit:focus { border-bottom-color: #3b82f6; outline: none; background: #f8fafc; }
         .btn-toggle { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 900; transition: all 0.2s; border: 1px solid #e2e8f0; background: white; color: #94a3b8; }
         .btn-toggle.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-        /* Tab Styles */
         .tab-btn { padding: 12px 20px; font-size: 10px; font-weight: 900; color: #64748b; border-bottom: 2px solid transparent; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
         .tab-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; background: rgba(59, 130, 246, 0.03); }
     </style>
@@ -158,39 +157,38 @@
             <div class="flex border-b border-slate-100 bg-slate-50/50 overflow-x-auto">
                 <button onclick="switchTab('weekly')" id="tab-weekly" class="tab-btn active border-b-2">Weekly Timeline</button>
                 <button onclick="switchTab('summary')" id="tab-summary" class="tab-btn">Overall Summary</button>
-                <button class="tab-btn opacity-50 cursor-not-allowed">Coming Soon</button>
-                <button class="tab-btn opacity-50 cursor-not-allowed">Coming Soon</button>
+                <button class="tab-btn opacity-50 cursor-not-allowed">By Use Case (Soon)</button>
+                <button class="tab-btn opacity-50 cursor-not-allowed">Block Dist (Soon)</button>
             </div>
 
             <div class="p-8 flex-1">
                 <div id="view-weekly" class="tab-view">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b">
-                                <tr><th class="py-6">Timeline</th><th class="text-center">Net Working Days</th><th class="text-center">Demand Hours</th><th class="text-right px-10">Target FTE</th></tr>
-                            </thead>
-                            <tbody id="tableBody" class="divide-y divide-slate-100 text-sm"></tbody>
-                        </table>
-                    </div>
+                    <table class="w-full text-left">
+                        <thead class="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b">
+                            <tr><th class="py-6">Timeline</th><th class="text-center">Net Working Days</th><th class="text-center">Demand Hours</th><th class="text-right px-10">Target FTE</th></tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
                 </div>
 
                 <div id="view-summary" class="tab-view hidden space-y-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 space-y-4">
-                            <h4 class="text-[10px] font-black tracking-widest uppercase text-slate-400">Scaling Directive</h4>
-                            <div id="summaryScale" class="text-lg font-black tracking-tight leading-tight"></div>
+                        <div class="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 space-y-4">
+                            <h4 class="text-[10px] font-black tracking-widest uppercase text-slate-400">Workstream Capacity Directive</h4>
+                            <div id="summaryScale" class="text-xl font-black tracking-tight leading-snug"></div>
                         </div>
-                        <div class="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 space-y-4">
-                            <h4 class="text-[10px] font-black tracking-widest uppercase text-slate-400">System Efficiency</h4>
-                            <div id="summaryEfficiency" class="text-3xl font-black tracking-tighter text-blue-600"></div>
+                        <div class="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 space-y-4">
+                            <h4 class="text-[10px] font-black tracking-widest uppercase text-slate-400">System Efficiency index</h4>
+                            <div id="summaryEfficiency" class="text-4xl font-black tracking-tighter text-blue-600"></div>
                         </div>
                     </div>
-                    <div class="p-8 bg-slate-900 rounded-[2rem] text-white space-y-4">
+                    <div class="p-8 bg-slate-900 rounded-[2.5rem] text-white space-y-4 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-6 opacity-10"><i data-lucide="shield-alert" class="w-24 h-24"></i></div>
                         <div class="flex items-center gap-3">
                             <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400"></i>
-                            <h4 class="text-[10px] font-black tracking-[0.2em] uppercase">Fulfillment Risk Assessment</h4>
+                            <h4 class="text-[10px] font-black tracking-[0.2em] uppercase text-slate-400">Fulfillment Risk Assessment</h4>
                         </div>
-                        <div id="summaryHolidayRisk" class="text-[11px] font-black italic text-slate-400 tracking-tight leading-relaxed uppercase"></div>
+                        <div id="summaryHolidayRisk" class="text-[11px] font-black italic text-slate-300 tracking-tight leading-relaxed uppercase"></div>
                     </div>
                 </div>
             </div>
@@ -458,40 +456,57 @@
                     <td class="px-10 py-6 text-right px-10"><span class="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">${fte.toFixed(1)} FTE</span></td></tr>`;
         });
 
-        // SUMMARY CALCULATIONS
+        // --- SMART SUMMARY LOGIC ---
         const forfeit = parseFloat(document.getElementById('forfeit').value) / 100;
-        const dailyDemand = (dailyInput / tpt);
+        const demandHrs = (state.mode === 'volume') ? (dailyInput / tpt) : dailyInput;
+        
         let supplyHrs = 0;
-        let primaryShiftLen = 8;
+        let rosterConfigs = []; 
         const hrInputs = document.querySelectorAll('.roster-hrs-val');
         const hcInputs = document.querySelectorAll('.roster-hc-val');
-        
         hrInputs.forEach((inp, idx) => {
             let h = parseFloat(inp.value) || 0;
             let c = parseFloat(hcInputs[idx].value) || 0;
-            supplyHrs += (h * c);
-            if(idx === 0 && h > 0) primaryShiftLen = h;
+            if (h > 0) {
+                supplyHrs += (h * c);
+                rosterConfigs.push(h);
+            }
         });
 
         const netSupply = supplyHrs * (1 - forfeit);
-        const dailyVariance = netSupply - dailyDemand;
-        const efficiency = (netSupply / dailyDemand) * 100;
+        const variance = netSupply - demandHrs;
+        const efficiency = (netSupply / demandHrs) * 100;
 
-        // Scaling Directive
         const scaleEl = document.getElementById('summaryScale');
-        if (Math.abs(dailyVariance) < 0.5) {
-            scaleEl.innerHTML = `<span class="text-emerald-500">OPTIMIZED</span><br><span class="text-[10px] text-slate-500 uppercase tracking-widest">Headcount perfectly aligned</span>`;
-        } else if (dailyVariance < 0) {
-            const hire = Math.ceil(Math.abs(dailyVariance) / primaryShiftLen);
-            scaleEl.innerHTML = `<span class="text-rose-500 font-black uppercase tracking-tighter">HIRE +${hire} CWs</span><br><span class="text-[9px] text-slate-500 uppercase tracking-widest italic">Targeting ${primaryShiftLen}hr shifts</span>`;
+        if (Math.abs(variance) < 0.5) {
+            scaleEl.innerHTML = `<span class="text-emerald-500 font-black">STABILIZED</span><br><span class="text-[9px] text-slate-400">Supply matches demand perfectly</span>`;
         } else {
-            const off = Math.floor(dailyVariance / primaryShiftLen);
-            scaleEl.innerHTML = `<span class="text-amber-500 font-black uppercase tracking-tighter">OFFBOARD -${off} CWs</span><br><span class="text-[9px] text-slate-500 uppercase tracking-widest italic">Excess on ${primaryShiftLen}hr shifts</span>`;
+            let rem = Math.abs(variance);
+            let action = variance < 0 ? 'HIRE' : 'OFFBOARD';
+            let color = variance < 0 ? 'text-rose-500' : 'text-amber-500';
+            let directive = `<div class="${color} font-black uppercase mb-1">${action} Directive:</div>`;
+            
+            if (rosterConfigs.length > 0) {
+                let primary = rosterConfigs[0];
+                let count = Math.floor(rem / primary);
+                if (count > 0) {
+                    directive += `<div class="text-slate-700 font-black text-sm">${count} CWs (@ ${primary}hrs)</div>`;
+                    rem -= (count * primary);
+                }
+                if (rem > 0.5) directive += `<div class="text-slate-500 text-[10px] uppercase font-black">+ ${rem.toFixed(1)} HRS Support</div>`;
+            }
+            scaleEl.innerHTML = directive;
         }
 
-        document.getElementById('summaryEfficiency').innerText = efficiency.toFixed(1) + "%";
+        const effVal = isFinite(efficiency) ? efficiency.toFixed(1) : 0;
+        const taskDelta = Math.round(variance * tpt);
+        document.getElementById('summaryEfficiency').innerHTML = `
+            ${effVal}%
+            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                ${variance < 0 ? 'Deficit' : 'Surplus'}: ${Math.abs(variance).toFixed(1)} HRS (${Math.abs(taskDelta).toLocaleString()} Tasks)
+            </div>
+        `;
 
-        // Holiday Risk Logic
         const holsInMonth = activeHols.filter(d => {
             let dt = new Date(d);
             return dt.getMonth() === targetMonth;
@@ -499,16 +514,14 @@
         
         const riskEl = document.getElementById('summaryHolidayRisk');
         if (!state.workHolidays && holsInMonth > 0) {
-            riskEl.innerHTML = `Identified ${holsInMonth} public holidays this month across selected regions. Total capacity risk is elevated. If not worked, monthly fulfillment will drop by approx ${((holsInMonth / (workDaysInMonth + holsInMonth)) * 100).toFixed(0)}%.`;
+            riskEl.innerHTML = `WORKSTREAM ALERT: ${holsInMonth} regional holidays detected. <br>Fulfillment risk is ${efficiency < 100 ? 'CRITICAL' : 'ELEVATED'}. Potential capacity loss: ${((holsInMonth / (workDaysInMonth + holsInMonth)) * 100).toFixed(0)}% of monthly target.`;
         } else {
-            riskEl.innerText = "No active holiday shrinkage detected for the current month settings.";
+            riskEl.innerText = "Workstream status: No external holiday risks identified.";
         }
 
-        // Scoreboard Update
-        const variance = netSupply - dailyDemand;
         const cards = [
             { label: state.mode === 'volume' ? 'Monthly Total' : 'Monthly Hrs', val: state.mode === 'volume' ? Math.round(totalMonthVolume).toLocaleString() : Math.round(totalMonthHrs).toLocaleString(), icon: 'target', color: 'text-blue-600' },
-            { label: 'Daily Demand', val: dailyDemand.toFixed(1) + ' HRS', icon: 'zap', color: 'text-blue-600' },
+            { label: 'Daily Demand', val: demandHrs.toFixed(1) + ' HRS', icon: 'zap', color: 'text-blue-600' },
             { label: 'Daily Supply', val: netSupply.toFixed(1) + ' HRS', icon: 'users-2', color: 'text-emerald-600' },
             { label: 'Shift Health', val: (variance >= 0 ? '+' : '') + variance.toFixed(1), icon: 'activity', color: variance >= 0 ? 'text-emerald-500' : 'text-red-500' }
         ];
